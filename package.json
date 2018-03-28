@@ -1,0 +1,16 @@
+{
+  "name": "scoreboard-api",
+  "version": "1.0.0",
+  "description": "Backend for the running kitty game on the homepage.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "aes-js": "^3.1.0",
+    "express": "^4.16.3",
+    "lowdb": "^1.0.0",
+    "moment": "^2.21.0",
+    "socket.io": "^2.0.4"
+  }
+}
