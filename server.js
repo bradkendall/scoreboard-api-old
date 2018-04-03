@@ -1,13 +1,34 @@
-//Configuration options
-var allowed_origins = ['http://127.0.0.1:4200', 'https://www.kittycash.com', 'https://staging.kittycash.com'];
-//How long the key should remain valid
-var key_validity = 2000;
-//The pixel_coefficient needs to match the pixel_coefficient in index.js of the game.  This is used to calculate distance to scores.
-var pixel_coefficient = 0.025;
-var port = 3000;
-var database_file = "./db.json";
 
-var app = require('express')();
+//['http://127.0.0.1:4200', 'https://www.kittycash.com', 'https://staging.kittycash.com'];
+//Check to make sure the required env variables have been set
+
+if (!process.env.SERVER)
+{
+	console.log("You must set the SERVER environment variable.");
+	console.log("EG: SERVER=https://upcat.pre-staging.kittycash.com");
+	process.exit(1);
+}
+
+if (!process.env.ALLOWED_ORIGINS)
+{
+	console.log("You must set the ALLOWED_ORIGINS environment variable.");
+	console.log("EG: ALLOWED_ORIGINS='https://www.kittycash.com https://staging.kittycash.com'");
+	process.exit(1);
+}
+//Configuration options (Loaded from environment variables)
+var io_server = process.env.SERVER;
+var allowed_origins = process.env.ALLOWED_ORIGINS.split(' ');
+
+//How long the key should remain valid
+var key_validity = process.env.KEY_VALIDITY ? process.env.KEY_VALIDITY : 2000;
+//The pixel_coefficient needs to match the pixel_coefficient in index.js of the game.  This is used to calculate distance to scores.
+var pixel_coefficient = process.env.PIXEL_COEFFICIENT ? process.env.PIXEL_COEFFICENT : 0.025;
+var port = process.env.PORT ? process.env.PORT : 3000;
+var database_file = process.env.DATABASE_FILE ? process.env.DATABASE_FILE : "./db.json";
+
+
+var express = require('express');
+var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var aesjs = require('aes-js');
@@ -18,6 +39,16 @@ var low = require('lowdb')
 var FileSync = require('lowdb/adapters/FileSync')
 var adapter = new FileSync(database_file)
 var db = low(adapter)
+
+//Setup swig for templating
+var swig = require('swig');
+app.engine('html', swig.renderFile);
+app.set('view engine', 'html');
+app.set('views', __dirname + '/game');
+app.set('view cache', true);
+
+//Host the game files
+app.use(express.static('game'));
 
 // Set the defaults (required if your JSON file is empty)
 db.defaults({ scores: [] })
@@ -37,7 +68,15 @@ app.use(function (req, res, next) {
     next();
 });
 
-app.get('/scoreboard/:span', function(req, res) {
+app.get('/game', function(req, res){
+	var show_scoreboard_link = req.query.show_scoreboard_link === 'true' ? true : false;
+	res.render('index', {
+		io_server: io_server, 
+		show_scoreboard_link: show_scoreboard_link
+	});
+});
+
+app.get('/scores/:span', function(req, res) {
 
 	var span = req.params.span;
 
@@ -97,7 +136,7 @@ io.on('connection', function(socket){
   	if (data && data.decoded)
   	{
   		var diff = 0;
-  		if (users[socket.id].achievements.length > 0)
+  		if (users[socket.id] && users[socket.id].achievments && users[socket.id].achievements.length > 0)
   		{
   			var last_achievment = users[socket.id].achievements[users[socket.id].achievements.length -1];
   			diff = (Date.now() - last_achievment.created_at);

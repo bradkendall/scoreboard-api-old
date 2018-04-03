@@ -1,6 +1,24 @@
 # scoreboard-api
 Backend for the running kitty game on the homepage.
 
+# Environment Variables
+Variable | Description | Required | Default
+---------|-------------|----------|---------
+SERVER   |The protocol and url of the server for the game to connect to.|YES
+ALLOWED_ORIGINS   |CORS Origins that can serve API calls to.  Should be space separated and enclosed in quotes|YES
+KEY_VALIDITY   |How long an encryption key is valid for in MS|NO|2000
+PIXEL_COEFFICIENT   |The `pixel_coefficient` needs to match the `pixel_coefficient` in `index.js` of the game.  This is used to calculate distance to scores|NO|0.025
+PORT   |The port the scoreboard api and game are served from|NO|3000
+DATABASE FILE|The json file to store scores in|NO|./db.json
+
+# Endpoints
+
+Endpoint | Description | Params
+---------|-------------|--------
+/game | Displays the game to be embedded | `show_scoreboard_link=true`
+/scores/:span | Returns a JSON object with top 5 scores for specified span | `day`, `week`, `month`
+
+
 # Main tasks
 
 Tasks                         | Description
